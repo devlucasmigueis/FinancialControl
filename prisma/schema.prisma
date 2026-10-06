@@ -16,6 +16,7 @@ model Expense {
   custoBRL        Float?
   data            DateTime
   descricao       String
+  categoria       String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   // Campos de parcelamento
@@ -25,4 +26,18 @@ model Expense {
   parcelamentoId  String?   // ID para agrupar parcelas do mesmo pagamento
   dataInicio      DateTime? // Data da primeira parcela
   dataFim         DateTime? // Data da última parcela
+}
+
+// Categoria de orçamento: limite mensal definido como % do salário do mês
+model Categoria {
+  id          String   @id @default(cuid())
+  nome        String   @unique
+  percentagem Float
+  createdAt   DateTime @default(now())
+}
+
+// Salário mensal em EUR. "mes" no formato YYYY-MM; um mês sem registo usa o anterior mais recente
+model Salario {
+  mes   String @id
+  valor Float
 }

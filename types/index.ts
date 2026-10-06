@@ -3,6 +3,7 @@ export interface ExpenseFormValues {
   custoBRL?: number | null;
   data: Date;
   descricao: string;
+  categoria?: string | null;
   parcelado?: boolean;
   numeroParcelas?: number;
 }
@@ -13,6 +14,7 @@ export interface Expense {
   custoBRL: number | null;
   data: Date;
   descricao: string;
+  categoria: string | null;
   createdAt: Date;
   updatedAt: Date;
   parcelado: boolean;
@@ -38,4 +40,15 @@ export interface ApiResponse<T> {
 export interface ExchangeRate {
   rate: number;
   timestamp: string;
+}
+
+export interface Categoria {
+  id: string;
+  nome: string;
+  percentagem: number;
+}
+
+export interface Salario {
+  mes: string;
+  valor: number;
 }

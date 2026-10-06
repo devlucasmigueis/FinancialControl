@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Form, Input, InputNumber, Button, DatePicker, Switch } from "antd";
+import { Form, InputNumber, Button, DatePicker, Select, Switch } from "antd";
 import { CalendarOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { ExpenseFormValues, ExchangeRate } from "@/types";
@@ -20,6 +20,7 @@ interface ExpenseFormProps {
   onSubmit: (values: ExpenseFormValues) => void;
   loading?: boolean;
   descricoesAnteriores?: string[];
+  categorias?: string[];
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -28,6 +29,7 @@ export default function ExpenseForm({
   onSubmit,
   loading,
   descricoesAnteriores = [],
+  categorias = [],
 }: ExpenseFormProps) {
   const [form] = Form.useForm<ExpenseFormValues>();
   const [isParcelado, setIsParcelado] = useState(false);
@@ -215,6 +217,19 @@ export default function ExpenseForm({
           size="large"
           maxLength={FORM_RULES.descricaoMaxLength}
           autoSize={{ minRows: 3, maxRows: 6 }}
+        />
+      </Form.Item>
+      <Form.Item name="categoria">
+        <Select
+          placeholder={
+            categorias.length > 0
+              ? "Categoria (opcional)"
+              : "Sem categorias — cria-as em Orçamento"
+          }
+          size="large"
+          allowClear
+          disabled={categorias.length === 0}
+          options={categorias.map((c) => ({ value: c, label: c }))}
         />
       </Form.Item>
       <div className="bg-canvas border border-line p-4 rounded-lg mb-6 flex flex-col gap-5">

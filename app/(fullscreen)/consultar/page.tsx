@@ -18,7 +18,7 @@ import {
 } from "antd";
 import { CalendarOutlined, DeleteOutlined, SearchOutlined, EditOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { Expense } from "@/types";
+import { Categoria, Expense } from "@/types";
 import { formatCurrency } from "@/utils";
 import Link from "antd/es/typography/Link";
 import dayjs from "dayjs";
@@ -33,9 +33,14 @@ export default function ConsultarPage() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [form] = Form.useForm();
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
 
   useEffect(() => {
     fetchExpenses();
+    fetch("/api/categorias")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setCategorias)
+      .catch((error) => console.error("Erro ao buscar categorias:", error));
   }, []);
 
   const fetchExpenses = async () => {
@@ -143,6 +148,7 @@ export default function ConsultarPage() {
       custoBRL: expense.custoBRL,
       data: dayjs(expense.data),
       descricao: expense.descricao,
+      categoria: expense.categoria ?? undefined,
     });
     setEditModalOpen(true);
   };
@@ -161,6 +167,7 @@ export default function ConsultarPage() {
           custoBRL: values.custoBRL,
           data: values.data.toISOString(),
           descricao: values.descricao,
+          categoria: values.categoria ?? null,
         }),
       });
 
@@ -194,6 +201,11 @@ export default function ConsultarPage() {
       render: (value: string, record: Expense) => (
         <div className="flex flex-col">
           <span>{value}</span>
+          {record.categoria && (
+            <Tag color="geekblue" className="w-fit mt-1">
+              {record.categoria}
+            </Tag>
+          )}
           {record.parcelado && record.parcelaAtual && record.numeroParcelas && (
             <Tag color="purple" className="w-fit mt-1">
               {record.parcelaAtual}/{record.numeroParcelas}
@@ -476,6 +488,14 @@ export default function ConsultarPage() {
               rows={3}
               placeholder="Descrição"
               size="large"
+            />
+          </Form.Item>
+          <Form.Item name="categoria" label="Categoria">
+            <Select
+              placeholder="Sem categoria"
+              size="large"
+              allowClear
+              options={categorias.map((c) => ({ value: c.nome, label: c.nome }))}
             />
           </Form.Item>
         </Form>

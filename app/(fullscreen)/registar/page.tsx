@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { message } from "antd";
 import ExpenseForm from "@/app/components/expense-form/ExpenseForm";
-import { ExpenseFormValues } from "@/types";
+import { Categoria, Expense, ExpenseFormValues, Salario } from "@/types";
+import { orcamentoDoMes, salarioDoMes } from "@/lib/orcamento";
+import { formatCurrency } from "@/utils";
 
 export default function RegistarPage() {
   const [loading, setLoading] = useState(false);
   const [descricoes, setDescricoes] = useState<string[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
 
   const fetchDescricoes = useCallback(async () => {
     try {
@@ -22,7 +25,42 @@ export default function RegistarPage() {
 
   useEffect(() => {
     fetchDescricoes();
+    fetch("/api/categorias")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setCategorias)
+      .catch((error) => console.error("Erro ao buscar categorias:", error));
   }, [fetchDescricoes]);
+
+  // Avisa se o gasto registado fez a categoria passar do limite do mês
+  const verificarOrcamento = async (values: ExpenseFormValues) => {
+    const categoria = categorias.find((c) => c.nome === values.categoria);
+    if (!categoria) return;
+    const [expenses, salarios]: [Expense[], Salario[]] = await Promise.all([
+      fetch("/api/expenses").then((r) => r.json()),
+      fetch("/api/salario").then((r) => r.json()),
+    ]);
+    const data = new Date(values.data);
+    const salario = salarioDoMes(salarios, data.getFullYear(), data.getMonth());
+    if (!salario) return;
+    const [item] = orcamentoDoMes(
+      expenses,
+      [categoria],
+      salario.valor,
+      data.getFullYear(),
+      data.getMonth(),
+    );
+    if (item.estado === "excedido") {
+      message.error(
+        `Passaste o orçamento de ${item.nome}: ${formatCurrency(item.gasto, "EUR")} de ${formatCurrency(item.limite, "EUR")}`,
+        6,
+      );
+    } else if (item.estado === "alerta") {
+      message.warning(
+        `${item.nome} está quase no limite: ${formatCurrency(item.gasto, "EUR")} de ${formatCurrency(item.limite, "EUR")}`,
+        5,
+      );
+    }
+  };
 
   const handleSubmit = async (values: ExpenseFormValues) => {
     setLoading(true);
@@ -37,6 +75,7 @@ export default function RegistarPage() {
 
       message.success("Gasto registado com sucesso!");
       fetchDescricoes();
+      verificarOrcamento(values).catch((error) => console.error(error));
     } catch (error) {
       console.error(error);
       message.error("Erro ao registar gasto");
@@ -54,6 +93,7 @@ export default function RegistarPage() {
         onSubmit={handleSubmit}
         loading={loading}
         descricoesAnteriores={descricoes}
+        categorias={categorias.map((c) => c.nome)}
       />
     </div>
   );

@@ -21,6 +21,11 @@ export default function Home() {
                 Consultar Gastos
               </Button>
             </Link>
+            <Link href="/orcamento" className="w-full sm:w-auto">
+              <Button size="large" className="w-full">
+                Orçamento
+              </Button>
+            </Link>
             <Link href="/dashboard" className="w-full sm:w-auto">
               <Button size="large" className="w-full">
                 Dashboard
