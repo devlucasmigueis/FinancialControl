@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
           custoBRL: Math.round(custoBRLParcela * 100) / 100,
           data: dataParcela,
           descricao: body.descricao,
+          categoria: body.categoria || null,
           parcelado: true,
           numeroParcelas: numeroParcelas,
           parcelaAtual: i + 1,
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
         custoBRL: body.custoBRL ?? null,
         data: dataInicial,
         descricao: body.descricao,
+        categoria: body.categoria || null,
         parcelado: false,
       },
     });
@@ -138,7 +140,7 @@ export async function DELETE(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, custoEUR, custoBRL, data, descricao } = body;
+    const { id, custoEUR, custoBRL, data, descricao, categoria } = body;
 
     if (!id) {
       return NextResponse.json({ error: "ID é obrigatório" }, { status: 400 });
@@ -151,6 +153,7 @@ export async function PUT(request: NextRequest) {
         custoBRL: custoBRL ?? null,
         data: new Date(data),
         descricao,
+        ...(categoria !== undefined && { categoria: categoria || null }),
       },
     });
 

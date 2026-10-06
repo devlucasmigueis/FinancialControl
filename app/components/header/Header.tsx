@@ -21,6 +21,12 @@ export default function Header() {
         >
           Consultar
         </Link>
+        <Link
+          href="/orcamento"
+          className="text-base md:text-xl text-gray-900 font-bold hover:text-gray-600"
+        >
+          Orçamento
+        </Link>
       </nav>
     </header>
   );

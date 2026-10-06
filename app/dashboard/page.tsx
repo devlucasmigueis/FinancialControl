@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import type { Expense } from "@/types";
+import type { Categoria, Expense, Salario } from "@/types";
+import { orcamentoDoMes, salarioDoMes } from "@/lib/orcamento";
+import BudgetProgressList from "@/app/components/orcamento/BudgetProgressList";
 import {
   deltaVsMesAnterior,
   gastosDoMes,
@@ -23,13 +25,22 @@ import TopDescricoesChart from "./components/TopDescricoesChart";
 
 export default function DashboardPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [salarios, setSalarios] = useState<Salario[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/expenses")
-      .then((r) => r.json())
-      .then((data: Expense[]) => setExpenses(data))
+    Promise.all([
+      fetch("/api/expenses").then((r) => r.json()),
+      fetch("/api/categorias").then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/salario").then((r) => (r.ok ? r.json() : [])),
+    ])
+      .then(([e, c, s]: [Expense[], Categoria[], Salario[]]) => {
+        setExpenses(e);
+        setCategorias(c);
+        setSalarios(s);
+      })
       .catch((err) => console.error("Erro ao carregar gastos:", err))
       .finally(() => setLoading(false));
   }, []);
@@ -53,10 +64,17 @@ export default function DashboardPage() {
       top: topDescricoes(expenses, year, month, 5),
       media: mediaDiaria(expenses, year, month),
       delta: deltaVsMesAnterior(expenses, year, month),
+      orcamento: orcamentoDoMes(
+        expenses,
+        categorias,
+        salarioDoMes(salarios, year, month)?.valor ?? 0,
+        year,
+        month,
+      ),
       year,
       month,
     };
-  }, [expenses, selected]);
+  }, [expenses, categorias, salarios, selected]);
 
   if (loading) {
     return (
@@ -153,6 +171,15 @@ export default function DashboardPage() {
           </div>
         </div>
       </Section>
+
+      {categorias.length > 0 && (
+        <Section
+          title="Orçamento por categoria"
+          description="Quanto do limite (baseado no salário) já usaste em cada categoria."
+        >
+          <BudgetProgressList itens={stats.orcamento} />
+        </Section>
+      )}
 
       <Section
         title="Tendência diária"
